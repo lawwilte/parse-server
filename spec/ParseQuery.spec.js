@@ -5,8 +5,31 @@
 'use strict';
 
 const Parse = require('parse/node');
+const TestObject = Parse.Object.extend('TestObject');
 
 describe('Parse.Query testing', () => {
+  it('containsAllStartingWith should match all strings that starts with string', (done) => {
+    const obj1 = new TestObject({strings: ['the', 'brown', 'lazy', 'fox', 'jumps']});
+    const obj2 = new TestObject({strings: ['the', 'brown', 'fox', 'jumps']});
+    const obj3 = new TestObject({strings: ['over', 'the', 'lazy', 'dog']});
+    Parse.Object.saveAll([obj1, obj2, obj3]).then(() => {
+      const query = new Parse.Query(TestObject);
+      const strings = ['the', 'fox', 'lazy'];
+      return query.containsAllStartingWith('strings', strings).find();
+    }).then((results) => {
+      console.log(results);
+      equal(results.length, 1);
+      arrayContains(results, obj1);
+      const query = new Parse.Query(TestObject);
+      return query.containsAllStartingWith('strings', ['the', 'lazy']).find();
+    }).then((results) => {
+      equal(results.length, 2);
+      arrayContains(results, obj1);
+      arrayContains(results, obj3);
+      done();
+    }, done.fail);
+  });
+
   it("basic query", function(done) {
     var baz = new TestObject({ foo: 'baz' });
     var qux = new TestObject({ foo: 'qux' });
